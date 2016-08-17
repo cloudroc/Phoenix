@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>凤凰善笔记 - 文章详情</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<link rel="stylesheet" href="css/mui.min.css">
+		<link rel="stylesheet" href="css/app.css?v=2015123" />
+		<style>
+			html,
+			body {
+				min-height: 100%;
+				background-color: #efeff4;
+			}
+			
+			.pt-loader {
+				position: fixed;
+				top: 0;
+				bottom: 0;
+				padding: 55% 0;
+				width: 100%;
+				height: 100%;
+				color: #888;
+				font-size: 14px;
+				text-align: center;
+				background-color: #efeff4;
+				display: none;
+			}
+			
+			.pt-overlay .pt-loader {
+				display: block;
+			}
+			
+			.pt-overlay .mui-content {
+				display: none;
+			}
+			
+			.pt-article-bar {
+				-webkit-transition: -webkit-transform .3s, opacity .3s;
+				transition: transform .3s, opacity .3s;
+				-webkit-transform: translate3d(0, 100%, 0);
+				transform: translate3d(0, 100%, 0);
+				opacity: 0;
+			}
+			
+			.pt-article-bar.mui-active {
+				-webkit-transform: translate3d(0, 0, 0);
+				transform: translate3d(0, 0, 0);
+				opacity: 1;
+			}
+		</style>
+	</head>
+
+	<body class="pt-article-detail pt-overlay">
+		<div id="footer" class="pt-article-bar mui-bar mui-bar-standard mui-bar-footer">
+			<a id="back" class="mui-action-back mui-icon mui-icon-arrowleft mui-pull-left" style="padding: 10px;margin-left: -10px;"></a>
+			<!--
+        	<div class="mui-pull-right">
+				<a id="share" class="mui-icon mui-icon-upload" href="javascript:;"></a>
+			</div>
+            -->
+
+		</div>
+		<div class="mui-content">
+			<div id="pt-article-banner" class="pt-article-banner">
+				<div id="pt-article-cover" class="pt-article-cover">
+					<img/>
+					<div class="pt-image-overlay"></div>
+				</div>
+
+				<h2 id="pt-article-title" class="pt-article-title"></h2>
+			</div>
+			<div class="pt-article-content">
+				<div class="pt-article-meta">
+					<div id="pt-article-author" class="pt-article-author"></div>
+					<div class="pt-article-text">发表于</div>
+					<div id="pt-article-time" class="pt-article-time"></div>
+				</div>
+				<div id="pt-article-article" class="pt-article-article">
+
+				</div>
+
+				<div id="readmore" class="pt-article-article">
+					<a id="pt-readmore" href="" target="_blank" rel="external">阅读原文...</a>
+				</div>
+			</div>
+		</div>
+		<div id="loader" class="pt-loader">加载中...</div>
+		<script type="text/javascript" charset="UTF-8" src="js/mui.min.js"></script>
+		<script type="text/javascript" charset="UTF-8" src="js/html5sql.js"></script>
+		<script type="text/javascript" charset="UTF-8" src="js/app.js"></script>
+		<script type="text/javascript" charset="UTF-8" src="js/posts.js"></script>
+		<script>
+			var coverEl = document.querySelector("#pt-article-cover");
+			var titleEl = document.getElementById("pt-article-title");
+			var authorEl = document.getElementById("pt-article-author");
+			var timeEl = document.getElementById("pt-article-time");
+			var articleEl = document.getElementById("pt-article-article");
+			var footerEl = document.getElementById("footer");
+			var readmore = document.getElementById("pt-readmore");
+			var id = '';
+			mui.init({
+				beforeback: function() {
+					setTimeout(function() {
+						coverEl.replaceChild(document.createElement('img'), coverEl.querySelector('img'));
+						titleEl.innerText = '';
+						authorEl.innerText = '';
+						articleEl.innerHTML = '';
+						readmore.href = '';
+						footerEl.classList.remove('mui-active');
+						document.body.classList.add('pt-overlay');
+					}, 200);
+				}
+			});
+			document.body.addEventListener('tap', function() {
+				footerEl.classList.toggle('mui-active');
+			});
+			mui('#pt-article-article,#readmore').on('tap', 'a', function() {
+				var url = this.href;
+				var protocol = /^([\w-]+:)\/\//.test(url) ? RegExp.$1 : '';
+				if(protocol === 'http:' || protocol === 'https:') { //外部链接
+					var browserMainWebview = plus.webview.getWebviewById('browser_main');
+					var browserWebview = plus.webview.getWebviewById('browser');
+					mui.fire(browserMainWebview, 'mui.view.beforeshow');
+					browserWebview.loadURL(url);
+					browserMainWebview.show('slide-in-bottom', 200);
+				}
+			});
+			(function($) {
+				var regex = /\((.*)\)/;
+				html5sql.openDatabase("pt", "mypt", 5 * 1024 * 1024);
+				document.addEventListener('mui.view.beforeshow', function(event) {
+					//if (!event.detail.guid) return;
+					if(event.detail.$$type === 'back') {
+						setTimeout(function() {
+							document.body.classList.remove('pt-overlay');
+						}, 500);
+						return;
+					}
+					document.body.classList.add('pt-overlay');
+					//console.log("id1111111:" + event.detail.id);
+					pt.getNewsByGuid(decodeURIComponent(event.detail.id), function(news) {
+						id = event.detail.id;
+						//console.log(" rand="+getRandNum())
+						coverEl.querySelector('img').src = news.image || 'img/article_bg'+getRandNum()+'.png';
+						titleEl.innerText = news.title;
+						//console.log("news aaa:" + JSON.stringify(news));
+						var author = news.author || 'cloudroc';
+						var matches = author.match(regex);
+						if(matches && matches.length === 2) {
+							author = matches[1];
+						}
+						authorEl.innerText = author;
+						timeEl.innerText = pt.format(news.pubDate);
+						articleEl.innerHTML = news.content;
+
+						var link = news.link.replace('http://yoursite.com', 'http://www.kaedeen.com');
+
+						readmore.href = link;
+
+						window.scrollTo(0, 0);
+						setTimeout(function() {
+							document.body.classList.remove('pt-overlay');
+						}, 290);
+					});
+				});
+				var Intent = null,
+					main = null;
+				// H5 plus事件处理
+				$.plusReady(function() {
+					if(!mui.os.ios) {
+						Intent = plus.android.importClass("android.content.Intent");
+						main = plus.android.runtimeMainActivity();
+					}
+				});
+
+				/*
+				document.getElementById("share").addEventListener('tap', function(event) {
+					event.stopPropagation();
+					var intent = new Intent(Intent.ACTION_SEND);
+					intent.setType("text/plain");
+					intent.putExtra(Intent.EXTRA_TEXT, titleEl.innerText + '（' + guid + '）');
+					intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					main.startActivity(Intent.createChooser(intent, "系统分享"));
+				});
+				*/
+
+			})(mui);
+			
+			function getRandNum(){
+				var num = Math.random();//Math.random()：得到一个0到1之间的随机数
+				num = Math.ceil(num * 6);
+				return num;
+			}
+		</script>
+	</body>
+
+</html>

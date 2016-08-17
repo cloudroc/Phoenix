@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<link rel="stylesheet" href="css/mui.min.css">
+		<link rel="stylesheet" href="css/app.css" />
+		<link rel="stylesheet" href="css/about.css" />
+		<style>
+			body,
+			.mui-content {
+				background-color: #fff;
+				/*efeff4*/
+				
+				margin: 0px;
+				padding: 15px 0px;
+			}
+			.article {
+				font-size: 14px;
+				text-indent: 2em;
+			}
+			#qrcode {
+				width: 280px;
+				margin: 5px auto;
+			}
+			.mui-btn,
+			.mui-btn:hover,
+			.mui-btn:active {
+				background-color: #4a82d1;
+				color: #fff;
+				border: solid 1px #4a82d1;
+				width: 165px;
+				margin-bottom: 10px;
+			}
+			.mui-btn-group {
+				text-align: center;
+			}
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 id="title" class="mui-title pt-title">凤凰山笔记</h1>
+		</header>
+		<div class="container mui-content">
+			<article class="single-post-article">
+				<div class="content-wrapper-single">
+					<section class="article">
+						感谢您对凤凰山笔记的关注，github搜索cloudroc即可follow，以下二维码为我的支付宝付款码，欢迎打赏~
+					</section>
+					<img id="qrcode" src="img/qrcode.png" />
+					
+					<!--
+                    	<section class="mui-btn-group">
+							<a id="share" class="mui-btn">分享</a>
+							<a id="shortcut" class="mui-btn">创建桌面快捷方式</a>
+						</section>
+                    -->
+					
+				</div>
+			</article>
+		</div>
+		<script type="text/javascript" charset="UTF-8" src="js/mui.min.js"></script>
+		<script>
+			mui.init({
+				gestureConfig: {
+					longtap: true,
+				}
+			});
+			var qrcodeEl = document.getElementById("qrcode");
+			qrcodeEl.addEventListener('longtap', function() {
+				plus.nativeUI.actionSheet({
+					cancel: '取消',
+					buttons: [{
+						title: '保存到相册'
+					}]
+				}, function(e) {
+					var index = e.index;
+					if (e.index === 1) {
+						plus.gallery.save(qrcodeEl.src, function() {
+							mui.toast('保存成功');
+						}, function() {
+							mui.toast('保存失败，请重试！');
+						});
+					}
+				});
+			});
+			
+		</script>
+	</body>
+
+</html>
